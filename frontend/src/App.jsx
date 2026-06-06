@@ -12,7 +12,7 @@ const SECTOR_COORDS = {
 };
 
 // CRITICAL: Change this to your live Render URL before deploying to Vercel!
-const API_BASE = "https://kumbhsaarthi.onrender.com";
+const API_BASE = "https://kumbhsaarthi.onrender.com/api";
 
 const getSeverityColor = (severity) => severity === 'CRITICAL' ? '#ef4444' : severity === 'MEDIUM' ? '#f59e0b' : '#3b82f6';
 const getSeverityBorderClass = (severity) => severity === 'CRITICAL' ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : severity === 'MEDIUM' ? 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]';
