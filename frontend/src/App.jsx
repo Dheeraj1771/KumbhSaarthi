@@ -11,7 +11,6 @@ const SECTOR_COORDS = {
   10: [25.4358, 81.8863],
 };
 
-// CRITICAL: Change this to your live Render URL before deploying to Vercel!
 const API_BASE = "https://kumbhsaarthi.onrender.com/api";
 
 const getSeverityColor = (severity) => severity === 'CRITICAL' ? '#ef4444' : severity === 'MEDIUM' ? '#f59e0b' : '#3b82f6';
@@ -25,7 +24,6 @@ export default function App() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [showVolunteers, setShowVolunteers] = useState(true);
 
   // Modals State
@@ -37,11 +35,8 @@ export default function App() {
   useEffect(() => {
     fetchIncidents();
     fetchVolunteers();
-
-    const clockTimer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     const pollingTimer = setInterval(() => { fetchIncidents(); fetchVolunteers(); }, 10000);
-
-    return () => { clearInterval(clockTimer); clearInterval(pollingTimer); };
+    return () => clearInterval(pollingTimer);
   }, []);
 
   const fetchIncidents = async () => {
@@ -86,10 +81,7 @@ export default function App() {
       setActiveIncident(null);
       setRecommendations([]);
       fetchVolunteers();
-    } catch (error) {
-      console.error("Deployment API failed:", error);
-      showToast("Error: Deployment command failed to reach the server.");
-    }
+    } catch (error) { console.error(error); }
     setLoading(false);
   };
 
@@ -101,7 +93,7 @@ export default function App() {
       setShowRecruitForm(false);
       fetchVolunteers();
       setNewRecruit({ name: '', skills: 'Crowd Control', sector: 1 });
-    } catch (error) { console.error("Recruitment failed", error); }
+    } catch (error) { console.error(error); }
   };
 
   const handleIncidentSubmit = async (e) => {
@@ -112,7 +104,7 @@ export default function App() {
       setShowIncidentForm(false);
       fetchIncidents();
       setNewIncident({ description: '', skill: 'Crowd Control', severity: 'MEDIUM', sector: 1 });
-    } catch (error) { console.error("Failed to log incident", error); }
+    } catch (error) { console.error(error); }
   };
 
   const showToast = (message) => {
@@ -121,20 +113,28 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans relative">
+    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans relative overflow-x-hidden">
+
+      {/* Dynamic Style Injection to kill Leaflet's default white background canvas completely */}
+      <style>{`
+        .leaflet-container { background: #030712 !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+      `}</style>
 
       {toast && (
-        <div className="absolute top-20 right-6 z-50 bg-emerald-900/90 border border-emerald-500 text-emerald-100 px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-5">
+        <div className="fixed top-24 right-6 z-[9999] bg-emerald-900/90 border border-emerald-500 text-emerald-100 px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           <p className="font-medium text-sm">{toast}</p>
           <button onClick={() => setToast(null)} className="ml-2 text-emerald-400 hover:text-white"><X className="w-4 h-4" /></button>
         </div>
       )}
 
-      {/* Recruitment Modal */}
+      {/* Recruitment Modal - Now Fixed, view-centered, and scrollable on small phone viewports */}
       {showRecruitForm && (
-        <div className="absolute inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex justify-center items-center">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-96 shadow-2xl">
+        <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex justify-center items-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold flex items-center gap-2"><UserPlus className="text-blue-400 w-5 h-5" /> New Recruit</h3>
               <button onClick={() => setShowRecruitForm(false)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
@@ -142,11 +142,11 @@ export default function App() {
             <form onSubmit={handleRecruitSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Full Name</label>
-                <input required type="text" value={newRecruit.name} onChange={e => setNewRecruit({ ...newRecruit, name: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. Rahul Sharma" />
+                <input required type="text" value={newRecruit.name} onChange={e => setNewRecruit({ ...newRecruit, name: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="e.g. Rahul Sharma" />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Primary Skill</label>
-                <select value={newRecruit.skills} onChange={e => setNewRecruit({ ...newRecruit, skills: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                <select value={newRecruit.skills} onChange={e => setNewRecruit({ ...newRecruit, skills: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                   <option>Crowd Control</option>
                   <option>Medical Aid</option>
                   <option>Multilingual Translation</option>
@@ -156,7 +156,7 @@ export default function App() {
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Assign Sector (1-10)</label>
-                <input required type="number" min="1" max="10" value={newRecruit.sector} onChange={e => setNewRecruit({ ...newRecruit, sector: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+                <input required type="number" min="1" max="10" value={newRecruit.sector} onChange={e => setNewRecruit({ ...newRecruit, sector: e.target.value })} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
               </div>
               <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded transition-colors mt-2">Initialize Unit</button>
             </form>
@@ -164,10 +164,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Incident Reporting Modal */}
+      {/* Incident Reporting Modal - Now Fixed, view-centered, and mobile safe */}
       {showIncidentForm && (
-        <div className="absolute inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex justify-center items-center">
-          <div className="bg-gray-900 border border-amber-900/50 rounded-xl p-6 w-96 shadow-2xl">
+        <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex justify-center items-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-amber-900/50 rounded-xl p-6 w-full max-w-md shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold flex items-center gap-2 text-amber-400"><Megaphone className="w-5 h-5" /> Report Incident</h3>
               <button onClick={() => setShowIncidentForm(false)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
@@ -207,47 +207,46 @@ export default function App() {
         </div>
       )}
 
-      <header className="flex items-center justify-between px-6 py-4 bg-gray-900 border-b border-gray-800 shadow-md">
+      {/* Header Panel - Optimized flex structure for small mobile screens */}
+      <header className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-gray-900 border-b border-gray-800 shadow-md gap-4">
         <div className="flex items-center gap-3">
           <ShieldCheck className="text-emerald-500 w-8 h-8" />
           <h1 className="text-xl font-bold tracking-wide">KumbhSaarthi<span className="text-emerald-500">.AI</span></h1>
         </div>
-        <div className="flex items-center gap-6 text-sm font-medium">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-medium">
 
-          <div className="hidden md:flex items-center gap-4 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700 shadow-inner">
+          <div className="flex items-center gap-4 bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700 shadow-inner text-xs sm:text-sm">
             <span className="flex items-center gap-2 text-gray-300">
-              Total Force: <span className="text-blue-400 font-bold">{volunteers.length}</span>
+              Force: <span className="text-blue-400 font-bold">{volunteers.length}</span>
             </span>
             <span className="text-gray-600">|</span>
             <span className="flex items-center gap-1.5 text-gray-300">
-              <HeartPulse className="w-3 h-3 text-red-400" /> Exhausted/Resting: <span className="text-red-400 font-bold">{exhaustedCount}</span>
+              <HeartPulse className="w-3 h-3 text-red-400" /> Resting: <span className="text-red-400 font-bold">{exhaustedCount}</span>
             </span>
           </div>
 
-          <button onClick={() => setShowRecruitForm(true)} className="flex items-center gap-2 bg-blue-600/20 text-blue-400 border border-blue-500/50 hover:bg-blue-600/40 px-3 py-1.5 rounded-full transition-colors text-xs font-bold uppercase tracking-wider">
-            <UserPlus className="w-4 h-4" /> Recruit Unit
+          <button onClick={() => setShowRecruitForm(true)} className="flex items-center gap-2 bg-blue-600/20 text-blue-400 border border-blue-500/50 hover:bg-blue-600/40 px-3 py-1.5 rounded-full transition-colors text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+            <UserPlus className="w-3.5 h-3.5" /> Recruit
           </button>
 
-          <button onClick={() => setShowIncidentForm(true)} className="flex items-center gap-2 bg-amber-600/20 text-amber-400 border border-amber-500/50 hover:bg-amber-600/40 px-3 py-1.5 rounded-full transition-colors text-xs font-bold uppercase tracking-wider">
-            <Megaphone className="w-4 h-4" /> Log Alert
+          <button onClick={() => setShowIncidentForm(true)} className="flex items-center gap-2 bg-amber-600/20 text-amber-400 border border-amber-500/50 hover:bg-amber-600/40 px-3 py-1.5 rounded-full transition-colors text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+            <Megaphone className="w-3.5 h-3.5" /> Log Alert
           </button>
-
-          <span className="bg-gray-800 px-4 py-1.5 rounded-full border border-gray-700 shadow-inner hidden sm:block">
-            Active Alerts: <span className="text-emerald-400 font-bold ml-1">{incidents.length}</span>
-          </span>
         </div>
       </header>
 
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 p-4 gap-4 overflow-hidden">
+      {/* Main Container Grid - Responsive heights: dynamic viewport fill on desktop, natural scroll stacking on mobile */}
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 p-4 gap-4 h-auto lg:h-[calc(100vh-73px)] lg:overflow-hidden">
 
-        <section className="bg-gray-900/80 rounded-xl border border-gray-800 flex flex-col overflow-hidden shadow-2xl backdrop-blur-sm">
+        {/* Left Side Feed Panel */}
+        <section className="bg-gray-900/80 rounded-xl border border-gray-800 flex flex-col h-[450px] lg:h-full overflow-hidden shadow-2xl backdrop-blur-sm">
           <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900">
             <div className="flex items-center gap-2">
               <AlertTriangle className="text-amber-500 w-5 h-5" />
               <h2 className="font-semibold text-lg">Operational Alerts</h2>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-gray-900/20">
             {incidents.length === 0 ? (
               <div className="text-gray-500 text-center mt-20 flex flex-col items-center gap-2">
                 <ShieldCheck className="w-10 h-10 text-gray-700" />
@@ -258,7 +257,7 @@ export default function App() {
                 <div
                   key={inc.id}
                   onClick={() => handleOptimize(inc)}
-                  className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border relative overflow-hidden group ${activeIncident?.id === inc.id ? `bg-gray-800 ${getSeverityBorderClass(inc.severity)} transform scale-[1.02]` : 'bg-gray-800/40 border-gray-700 hover:bg-gray-800 hover:border-gray-500'}`}
+                  className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border relative overflow-hidden group ${activeIncident?.id === inc.id ? `bg-gray-800 ${getSeverityBorderClass(inc.severity)} transform scale-[1.01]` : 'bg-gray-800/40 border-gray-700 hover:bg-gray-800 hover:border-gray-500'}`}
                 >
                   {activeIncident?.id === inc.id && <div className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityBgClass(inc.severity)}`}></div>}
                   <div className="flex justify-between items-start mb-2">
@@ -280,7 +279,8 @@ export default function App() {
           </div>
         </section>
 
-        <section className="lg:col-span-2 flex flex-col gap-4">
+        {/* Right Side Map & Recommendation Column */}
+        <section className="lg:col-span-2 flex flex-col gap-4 h-full">
 
           {activeIncident && (
             <div className="bg-gray-900/90 rounded-xl border border-gray-800 p-5 shadow-2xl backdrop-blur-sm animate-in slide-in-from-top-4 duration-300">
@@ -323,7 +323,8 @@ export default function App() {
             </div>
           )}
 
-          <div className="flex-1 bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden relative z-0 min-h-[400px] shadow-inner">
+          {/* Map Section Wrapper - Bounded strict backgrounds and dimensions */}
+          <div className="flex-1 bg-gray-950 rounded-xl border border-gray-800 overflow-hidden relative z-0 min-h-[380px] lg:min-h-0 h-[450px] lg:h-full shadow-inner">
             <MapContainer center={[25.4358, 81.8463]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
               <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CartoDB' />
 
@@ -374,22 +375,23 @@ export default function App() {
               })}
             </MapContainer>
 
-            <div className="absolute bottom-4 left-4 z-[400] bg-gray-900/90 border border-gray-800 p-3 rounded-lg backdrop-blur-md">
-              <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Map Legend</h4>
-                <button onClick={() => setShowVolunteers(!showVolunteers)} className={`ml-4 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-colors ${showVolunteers ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}`}>
-                  <Users className="w-3 h-3" /> {showVolunteers ? 'HIDE CREW' : 'SHOW CREW'}
+            {/* Map Legend - Shifted slightly and sized dynamically for mobile layouts */}
+            <div className="absolute bottom-4 left-4 z-[400] bg-gray-900/90 border border-gray-800 p-3 rounded-lg backdrop-blur-md max-w-[260px] sm:max-w-none">
+              <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2 gap-2">
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Map Legend</h4>
+                <button onClick={() => setShowVolunteers(!showVolunteers)} className={`text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 transition-colors ${showVolunteers ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}`}>
+                  <Users className="w-2.5 h-2.5" /> {showVolunteers ? 'HIDE' : 'SHOW'}
                 </button>
               </div>
-              <div className="flex flex-col gap-2 text-xs text-gray-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500 opacity-80"></div> Critical</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500 opacity-80 ml-3"></div> Available Unit</div>
+              <div className="flex flex-col gap-1.5 text-[11px] text-gray-300">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 opacity-80"></div> Critical</div>
+                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500 opacity-80"></div> Available Unit</div>
                 </div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500 opacity-80"></div> Medium</div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500 opacity-80"></div> Low</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full border-2 border-emerald-500 bg-emerald-500 ml-3"></div> AI Target Match</div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 opacity-80"></div> Medium</div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-blue-500 opacity-80"></div> Low</div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full border border-emerald-500 bg-emerald-400"></div> AI Top Match</div>
                 </div>
               </div>
             </div>
