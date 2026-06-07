@@ -376,7 +376,7 @@ export default function App() {
             </MapContainer>
 
             {/* Map Legend - Shifted slightly and sized dynamically for mobile layouts */}
-            <div className="absolute bottom-4 left-4 z-[400] bg-gray-900/90 border border-gray-800 p-3 rounded-lg backdrop-blur-md max-w-[260px] sm:max-w-none">
+            <div className="absolute top-4 right-4 z-[400] bg-gray-900/90 border border-gray-800 p-3 rounded-lg backdrop-blur-md max-w-[260px] sm:max-w-none shadow-xl">
               <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2 gap-2">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Map Legend</h4>
                 <button onClick={() => setShowVolunteers(!showVolunteers)} className={`text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 transition-colors ${showVolunteers ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}`}>
